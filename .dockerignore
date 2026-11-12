@@ -1,0 +1,7 @@
+target/
+data/
+.git/
+.vscode/
+.idea/
+StudentRegister/
+StudentRegistration/

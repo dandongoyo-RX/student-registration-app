@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Registration</title>
+<style>
+  :root {
+    --bg: #f4f6f9;
+    --card: #ffffff;
+    --text: #1f2933;
+    --muted: #6b7785;
+    --border: #dde3ea;
+    --primary: #0f6e56;
+    --primary-dark: #0b5442;
+    --primary-soft: #e1f5ee;
+    --danger: #b42318;
+    --danger-soft: #fdecea;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+  header {
+    background: var(--primary);
+    color: #fff;
+    padding: 18px 32px;
+  }
+  header h1 { margin: 0; font-size: 22px; font-weight: 600; }
+  header p { margin: 2px 0 0; opacity: 0.85; font-size: 14px; }
+
+  main {
+    max-width: 1360px;
+    margin: 28px auto;
+    padding: 0 20px;
+    display: grid;
+    grid-template-columns: 340px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+  }
+  .card h2 { margin: 0 0 16px; font-size: 18px; font-weight: 600; }
+
+  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  label .opt { font-weight: 400; color: var(--muted); }
+  input {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+  input.invalid { border-color: var(--danger); }
+  .field { margin-bottom: 14px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .error { color: var(--danger); font-size: 12px; margin-top: 3px; min-height: 0; }
+  .hint { color: var(--muted); font-size: 12px; margin-top: 3px; }
+  .hint strong { color: var(--primary-dark); }
+  select {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #fff;
+  }
+  select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+  select.invalid { border-color: var(--danger); }
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filters select { width: auto; }
+  .btn-export { background: #fff; color: var(--primary-dark); border: 1px solid var(--border); padding: 8px 12px; font-weight: 500; text-decoration: none; font-size: 14px; border-radius: 8px; white-space: nowrap; }
+  .btn-export:hover { border-color: var(--primary); background: var(--primary-soft); }
+  .choice { display: flex; gap: 8px; }
+  .choice label { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--border); border-radius: 8px; padding: 8px; font-weight: 500; cursor: pointer; margin: 0; font-size: 14px; }
+  .choice input { width: auto; margin: 0; accent-color: var(--primary); }
+  .choice label:has(input:checked) { border-color: var(--primary); background: var(--primary-soft); color: var(--primary-dark); }
+  .choice.invalid label { border-color: var(--danger); }
+
+  .btn {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-primary { background: var(--primary); color: #fff; width: 100%; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-primary:disabled { opacity: 0.6; cursor: wait; }
+  .btn-secondary { background: transparent; color: var(--muted); width: 100%; margin-top: 8px; border: 1px solid var(--border); }
+  .btn-small { padding: 5px 10px; font-size: 13px; font-weight: 500; }
+  .btn-edit { background: var(--primary-soft); color: var(--primary-dark); }
+  .btn-delete { background: var(--danger-soft); color: var(--danger); margin-left: 6px; }
+
+  .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .toolbar h2 { margin: 0; }
+  .count { color: var(--muted); font-size: 14px; font-weight: 400; }
+  .toolbar input { max-width: 240px; }
+
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th {
+    text-align: left;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--muted);
+    font-weight: 600;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr.editing td { background: var(--primary-soft); }
+  .name { font-weight: 600; white-space: nowrap; }
+  .nowrap { white-space: nowrap; }
+  .date { color: var(--muted); font-size: 12px; white-space: nowrap; }
+  .actions { white-space: nowrap; text-align: right; }
+  .empty { text-align: center; color: var(--muted); padding: 36px 10px; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 12px 18px;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+    max-width: 360px;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.ok { background: var(--primary); }
+  .toast.fail { background: var(--danger); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Student Registration</h1>
+  <p>Register students and manage their records</p>
+</header>
+
+<main>
+  <!-- Registration / edit form -->
+  <section class="card">
+    <h2 id="form-title">Register a student</h2>
+    <form id="student-form" novalidate>
+      <div class="row">
+        <div class="field">
+          <label for="firstName">First name</label>
+          <input id="firstName" name="firstName" maxlength="100" autocomplete="off">
+          <div class="error" data-for="firstName"></div>
+        </div>
+        <div class="field">
+          <label for="lastName">Last name</label>
+          <input id="lastName" name="lastName" maxlength="100" autocomplete="off">
+          <div class="error" data-for="lastName"></div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="middleInitial">Middle initial</label>
+          <input id="middleInitial" name="middleInitial" maxlength="1" placeholder="Optional" autocomplete="off">
+          <div class="error" data-for="middleInitial"></div>
+        </div>
+        <div class="field">
+          <label for="dateOfBirth">Date of birth</label>
+          <input id="dateOfBirth" name="dateOfBirth" type="date">
+          <div class="hint" id="age-hint">Age is worked out from this</div>
+          <div class="error" data-for="dateOfBirth"></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Gender</label>
+        <div class="choice" id="gender" role="radiogroup" aria-label="Gender">
+          <label><input type="radio" name="gender" value="Male"> Male</label>
+          <label><input type="radio" name="gender" value="Female"> Female</label>
+        </div>
+        <div class="error" data-for="gender"></div>
+      </div>
+
+      <div class="field">
+        <label for="nationality">Nationality</label>
+        <select id="nationality" name="nationality">
+          <option value="">Loading countries…</option>
+        </select>
+        <div class="error" data-for="nationality"></div>
+      </div>
+
+      <div class="field">
+        <label for="grade">Class</label>
+        <select id="grade" name="grade">
+          <option value="">Select class</option>
+          <option>Form 1</option>
+          <option>Form 2</option>
+          <option>Form 3</option>
+        </select>
+        <div class="error" data-for="grade"></div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" id="submit-btn">Register student</button>
+      <button type="button" class="btn btn-secondary" id="cancel-btn" hidden>Cancel editing</button>
+    </form>
+  </section>
+
+  <!-- Student list -->
+  <section class="card">
+    <div class="toolbar">
+      <h2>Students <span class="count" id="count"></span></h2>
+      <div class="filters">
+        <select id="grade-filter" aria-label="Filter by class">
+          <option value="">All classes</option>
+          <option>Form 1</option>
+          <option>Form 2</option>
+          <option>Form 3</option>
+        </select>
+        <input id="search" type="search" placeholder="Search name or nationality">
+        <a class="btn-export" id="export-csv" href="/api/students/export?format=csv">Export CSV</a>
+        <a class="btn-export" id="export-xlsx" href="/api/students/export?format=xlsx">Export Excel</a>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Gender</th>
+            <th>Date of birth</th>
+            <th>Age</th>
+            <th>Nationality</th>
+            <th>Class</th>
+            <th>Registered</th>
+            <th>Last updated</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="student-rows">
+          <tr><td colspan="10" class="empty">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = "/api/students";
+  const FIELDS = ["firstName", "lastName", "middleInitial", "dateOfBirth", "nationality", "grade"];
+  const DEFAULT_COUNTRY = "Ghana";
+  const genderBox = document.getElementById("gender");
+
+  function getGender() {
+    const checked = form.querySelector('input[name="gender"]:checked');
+    return checked ? checked.value : null;
+  }
+  function setGender(value) {
+    form.querySelectorAll('input[name="gender"]').forEach(r => { r.checked = r.value === value; });
+  }
+
+  const form = document.getElementById("student-form");
+  const formTitle = document.getElementById("form-title");
+  const submitBtn = document.getElementById("submit-btn");
+  const cancelBtn = document.getElementById("cancel-btn");
+  const rows = document.getElementById("student-rows");
+  const countEl = document.getElementById("count");
+  const searchEl = document.getElementById("search");
+  const gradeFilterEl = document.getElementById("grade-filter");
+  const dobEl = document.getElementById("dateOfBirth");
+  const ageHint = document.getElementById("age-hint");
+  const countryEl = document.getElementById("nationality");
+  const toastEl = document.getElementById("toast");
+
+  let students = [];
+  let editingId = null;
+
+  // ---------- Helpers ----------
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function formatDate(value) {
+    if (!value) return "";
+    const d = new Date(value);
+    if (isNaN(d)) return escapeHtml(value);
+    const date = d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+    const time = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    return escapeHtml(date) + "<br>" + escapeHtml(time);
+  }
+
+  function formatDob(value) {
+    if (!value) return "";
+    const [y, m, d] = value.split("-").map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  }
+
+  function todayIso() {
+    const t = new Date();
+    return t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0") + "-" + String(t.getDate()).padStart(2, "0");
+  }
+
+  function ageFrom(iso) {
+    if (!iso) return null;
+    const [y, m, d] = iso.split("-").map(Number);
+    const t = new Date();
+    let age = t.getFullYear() - y;
+    if (t.getMonth() + 1 < m || (t.getMonth() + 1 === m && t.getDate() < d)) age--;
+    return age;
+  }
+
+  function updateAgeHint() {
+    const age = ageFrom(dobEl.value);
+    ageHint.innerHTML = age === null || isNaN(age)
+      ? "Age is worked out from this"
+      : "Age: <strong>" + age + "</strong> year" + (age === 1 ? "" : "s");
+  }
+
+  function fullName(s) {
+    const middle = s.middleInitial ? " " + s.middleInitial + "." : "";
+    return s.firstName + middle + " " + s.lastName;
+  }
+
+  let toastTimer;
+  function toast(message, ok = true) {
+    toastEl.textContent = message;
+    toastEl.className = "toast show " + (ok ? "ok" : "fail");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { toastEl.className = "toast"; }, 3000);
+  }
+
+  function clearErrors() {
+    document.querySelectorAll(".error").forEach(e => e.textContent = "");
+    FIELDS.forEach(f => document.getElementById(f).classList.remove("invalid"));
+    genderBox.classList.remove("invalid");
+  }
+
+  function showErrors(fieldErrors) {
+    for (const [field, message] of Object.entries(fieldErrors || {})) {
+      const box = document.querySelector('.error[data-for="' + field + '"]');
+      if (box) box.textContent = message;
+      const input = field === "gender" ? genderBox : document.getElementById(field);
+      if (input) input.classList.add("invalid");
+    }
+  }
+
+  function readForm() {
+    const data = {};
+    FIELDS.forEach(f => {
+      const value = document.getElementById(f).value.trim();
+      if (f === "dateOfBirth") data.dateOfBirth = value === "" ? null : value;
+      else if (f === "middleInitial") data.middleInitial = value === "" ? null : value;
+      else data[f] = value;
+    });
+    data.gender = getGender();
+    return data;
+  }
+
+  // ---------- API calls ----------
+  async function loadCountries() {
+    try {
+      const res = await fetch("/api/countries");
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const names = await res.json();
+      countryEl.innerHTML = '<option value="">Select country</option>' +
+        names.map(n => '<option>' + escapeHtml(n) + '</option>').join("");
+      countryEl.value = DEFAULT_COUNTRY;
+    } catch (err) {
+      countryEl.innerHTML = '<option value="">Could not load countries</option>';
+    }
+  }
+
+  async function loadStudents() {
+    try {
+      const res = await fetch(API);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      students = await res.json();
+      render();
+    } catch (err) {
+      rows.innerHTML = '<tr><td colspan="10" class="empty">Could not load students. Is the app running?</td></tr>';
+      countEl.textContent = "";
+    }
+  }
+
+  async function saveStudent(event) {
+    event.preventDefault();
+    clearErrors();
+    submitBtn.disabled = true;
+
+    const url = editingId ? API + "/" + editingId : API;
+    const method = editingId ? "PUT" : "POST";
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(readForm())
+      });
+      const body = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        toast(editingId ? "Student updated" : "Student registered");
+        resetForm();
+        await loadStudents();
+      } else if (res.status === 409) {
+        showErrors(body.fields);
+        toast(body.error || "This student is already registered", false);
+      } else if (res.status === 400 && body.fields) {
+        showErrors(body.fields);
+        toast("Please fix the highlighted fields", false);
+      } else {
+        toast(body.error || "Something went wrong (HTTP " + res.status + ")", false);
+      }
+    } catch (err) {
+      toast("Could not reach the server. Is the app running?", false);
+    } finally {
+      submitBtn.disabled = false;
+    }
+  }
+
+  async function deleteStudent(id) {
+    const s = students.find(x => x.id === id);
+    if (!s || !confirm("Delete " + fullName(s) + "? This cannot be undone.")) return;
+    try {
+      const res = await fetch(API + "/" + id, { method: "DELETE" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "HTTP " + res.status);
+      }
+      if (editingId === id) resetForm();
+      toast("Student deleted");
+      await loadStudents();
+    } catch (err) {
+      toast("Delete failed: " + err.message, false);
+    }
+  }
+
+  // ---------- Edit mode ----------
+  function startEdit(id) {
+    const s = students.find(x => x.id === id);
+    if (!s) return;
+    editingId = id;
+    clearErrors();
+    FIELDS.forEach(f => { document.getElementById(f).value = s[f] ?? ""; });
+    setGender(s.gender);
+    updateAgeHint();
+    formTitle.textContent = "Edit student #" + id;
+    submitBtn.textContent = "Save changes";
+    cancelBtn.hidden = false;
+    render();
+    document.getElementById("firstName").focus();
+  }
+
+  function resetForm() {
+    editingId = null;
+    form.reset();
+    setGender(null);
+    countryEl.value = DEFAULT_COUNTRY;
+    updateAgeHint();
+    clearErrors();
+    formTitle.textContent = "Register a student";
+    submitBtn.textContent = "Register student";
+    cancelBtn.hidden = true;
+    render();
+  }
+
+  // ---------- Table ----------
+  function render() {
+    const q = searchEl.value.trim().toLowerCase();
+    const g = gradeFilterEl.value;
+    const list = students.filter(s =>
+      (!g || s.grade === g) &&
+      (!q || [fullName(s), s.nationality].join(" ").toLowerCase().includes(q))
+    );
+
+    countEl.textContent = "(" + students.length + ")";
+
+    if (students.length === 0) {
+      rows.innerHTML = '<tr><td colspan="10" class="empty">No students registered yet. Use the form to add the first one.</td></tr>';
+      return;
+    }
+    if (list.length === 0) {
+      rows.innerHTML = '<tr><td colspan="10" class="empty">No students match your search.</td></tr>';
+      return;
+    }
+
+    rows.innerHTML = list.map(s => `
+      <tr class="${s.id === editingId ? "editing" : ""}">
+        <td>${s.id}</td>
+        <td class="name">${escapeHtml(fullName(s))}</td>
+        <td>${escapeHtml(s.gender)}</td>
+        <td class="nowrap">${formatDob(s.dateOfBirth)}</td>
+        <td>${escapeHtml(s.age)}</td>
+        <td>${escapeHtml(s.nationality)}</td>
+        <td class="nowrap">${escapeHtml(s.grade)}</td>
+        <td class="date">${formatDate(s.createdAt)}</td>
+        <td class="date">${formatDate(s.updatedAt)}</td>
+        <td class="actions">
+          <button class="btn btn-small btn-edit" data-edit="${s.id}">Edit</button>
+          <button class="btn btn-small btn-delete" data-delete="${s.id}">Delete</button>
+        </td>
+      </tr>`).join("");
+  }
+
+  // ---------- Events ----------
+  form.addEventListener("submit", saveStudent);
+  cancelBtn.addEventListener("click", resetForm);
+  searchEl.addEventListener("input", render);
+  function updateExportLinks() {
+    const g = gradeFilterEl.value;
+    const extra = g ? "&grade=" + encodeURIComponent(g) : "";
+    document.getElementById("export-csv").href = "/api/students/export?format=csv" + extra;
+    document.getElementById("export-xlsx").href = "/api/students/export?format=xlsx" + extra;
+  }
+  gradeFilterEl.addEventListener("change", () => { render(); updateExportLinks(); });
+  genderBox.addEventListener("change", () => {
+    genderBox.classList.remove("invalid");
+    const box = document.querySelector('.error[data-for="gender"]');
+    if (box) box.textContent = "";
+  });
+  dobEl.addEventListener("input", updateAgeHint);
+  dobEl.max = todayIso();
+  document.getElementById("middleInitial").addEventListener("input", e => { e.target.value = e.target.value.toUpperCase(); });
+  rows.addEventListener("click", e => {
+    const edit = e.target.closest("[data-edit]");
+    const del = e.target.closest("[data-delete]");
+    if (edit) startEdit(Number(edit.dataset.edit));
+    if (del) deleteStudent(Number(del.dataset.delete));
+  });
+  FIELDS.forEach(f => ["input", "change"].forEach(evt => document.getElementById(f).addEventListener(evt, () => {
+    document.getElementById(f).classList.remove("invalid");
+    const box = document.querySelector('.error[data-for="' + f + '"]');
+    if (box) box.textContent = "";
+  })));
+
+  loadCountries();
+  loadStudents();
+</script>
+</body>
+</html>
